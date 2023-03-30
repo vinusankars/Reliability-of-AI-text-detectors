@@ -1,0 +1,10 @@
+evaluate
+transformers
+numpy
+pytorch
+nltk
+pprint
+datasets
+matplotlib
+seaborn
+# pip install git+https://github.com/PrithivirajDamodaran/Parrot_Paraphraser.git
