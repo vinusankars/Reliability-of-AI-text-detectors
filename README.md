@@ -7,9 +7,10 @@ rephrase/ contains the paraphrasing attacks.<br/>
 impossibilty/ contains codes for visualizing our theoretical results.<br/>
 pair-distribution/ contains codes for spoofing atttacks.<br/>
 
+![](title.png)
 
 <p/>
-========================================================================================
+====================================================================
 
 COPYRIGHT AND PERMISSION NOTICE <br/>
 UMD Software [Can AI-Generated Text be Reliably Detected?] Copyright (C) 2022 University of Maryland<br/>
