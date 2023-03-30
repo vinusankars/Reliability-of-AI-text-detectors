@@ -1,17 +1,11 @@
 # Can AI-Generated Text be Reliably Detected?
 ### Paper: https://arxiv.org/abs/2303.11156
 
-This repository contains codes for reproducing our results on paraphrasing attacks, impossibility results, and spoofing attacks.  
+This repository contains codes for reproducing our results on paraphrasing attacks, impossibility results, and spoofing attacks. Please see requirements.txt for Python libraries that are needed. To reproduce our attacks on text watermarks, clone the repository from https://github.com/jwkirchenbauer/lm-watermarking.git to this folder.
 
-Please see requirements.txt for Python libraries that are needed.
-
-To reproduce our attacks on text watermarks, clone the repository from https://github.com/jwkirchenbauer/lm-watermarking.git to this folder.
-
-rephrase/ contains the paraphrasing attacks.
-
-impossibilty/ contains codes for visualizing our theoretical results.
-
-pair-distribution/ contains codes for spoofing atttacks.
+rephrase/ contains the paraphrasing attacks.<br/>
+impossibilty/ contains codes for visualizing our theoretical results.<br/>
+pair-distribution/ contains codes for spoofing atttacks.<br/>
 
 
 <p/>
