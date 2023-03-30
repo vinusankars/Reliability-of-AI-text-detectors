@@ -1,4 +1,5 @@
-# Reliability-of-AI-text-detectors
+# Can AI-Generated Text be Reliably Detected?
+### Paper: https://arxiv.org/abs/2303.11156
 
 
 
