@@ -5,13 +5,11 @@ import json
 import os
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from sklearn.metrics import roc_auc_score
 from sklearn.linear_model import LogisticRegression
-import numpy as np
 
 # Hyperparameters
 batch_size = 100
-seq_len = 50
+seq_len = 25
 
 # Function to estimate total variation using Linear classification on the features
 def tv_estimate(webtext_features, gpt2_features):
@@ -22,11 +20,23 @@ def tv_estimate(webtext_features, gpt2_features):
     # Scale the features
     X = (X - X.mean(dim=0)) / X.std(dim=0)
 
-    # Train a linear classifier
-    clf = LogisticRegression(random_state=0, max_iter=2000).fit(X, y)
+    # Shuffle the data
+    perm = torch.randperm(X.shape[0])
+    X = X[perm]
+    y = y[perm]
 
-    # Predict the labels
-    y_pred = clf.predict_proba(X)[:,1]
+    # Split the data into train and test
+    split = int(0.75 * X.shape[0])
+    X_train = X[:split]
+    y_train = y[:split]
+    X_test = X[split:]
+    y_test = y[split:]
+
+    # Train a linear classifier
+    clf = LogisticRegression(random_state=0, max_iter=2000).fit(X_train, y_train)
+
+    # Predict the labels for the test data
+    y_pred = clf.predict_proba(X_test)[:,1]
 
     # Threshold the predictions
     y_pred[y_pred >= 0.5] = 1
@@ -37,14 +47,14 @@ def tv_estimate(webtext_features, gpt2_features):
     fp = 0
     tn = 0
     fn = 0
-    for i in range(len(y)):
-        if y[i] == 1 and y_pred[i] == 1:
+    for i in range(len(y_test)):
+        if y_test[i] == 1 and y_pred[i] == 1:
             tp += 1
-        elif y[i] == 0 and y_pred[i] == 1:
+        elif y_test[i] == 0 and y_pred[i] == 1:
             fp += 1
-        elif y[i] == 0 and y_pred[i] == 0:
+        elif y_test[i] == 0 and y_pred[i] == 0:
             tn += 1
-        elif y[i] == 1 and y_pred[i] == 0:
+        elif y_test[i] == 1 and y_pred[i] == 0:
             fn += 1
 
     # Find rates
@@ -58,7 +68,7 @@ def tv_estimate(webtext_features, gpt2_features):
 # List of datasets to evaluate
 datasets = [
     'webtext',      # Human-generated text
-    'small-117M',  'small-117M-k40',    # Machine-generated text
+    'small-117M',  'small-117M-k40',    # Machine-generated text from GPT-2
     'medium-345M', 'medium-345M-k40',
     'large-762M',  'large-762M-k40',
     'xl-1542M',    'xl-1542M-k40',
@@ -76,6 +86,14 @@ for ds in datasets:
     if not os.path.exists(os.path.join(data_dir, filename)):
         print("Downloading dataset: %s" % ds)
         os.system('wget ' + url_prefix + filename + ' -P ' + data_dir)
+
+# Download GPT-3 output dataset
+url_prefix = 'https://github.com/openai/gpt-3/raw/master/'
+filename = '175b_samples.jsonl'
+
+if not os.path.exists(os.path.join(data_dir, filename)):
+    print("Downloading dataset: %s" % ds)
+    os.system('wget ' + url_prefix + filename + ' -P ' + data_dir)
 
 # Load datasets into memory from data directory
 gpt2 = {}
@@ -96,11 +114,19 @@ for ds in datasets:
         
         print('Loaded dataset %s with %d samples' % (ds, len(gpt2[ds])))
 
+# Load GPT-3 dataset
+gpt3 = []
+with open(os.path.join(data_dir, '175b_samples.jsonl'), 'r') as f:
+    for line in f:
+        gpt3.append(json.loads(line))
+
+print('Loaded dataset %s with %d samples' % ('gpt3', len(gpt3)))
 
 # Load semantic features model
 print("Loading semantic features model")
-model = AutoModelForSequenceClassification.from_pretrained('roberta-base')
-tokenizer = AutoTokenizer.from_pretrained('roberta-base')
+model_name = 'roberta-base-openai-detector'     # 'roberta-base'
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 model.eval()
 
 # Set PyTorch device to CUDA
@@ -150,6 +176,23 @@ for ds in datasets:
         print("Estimating total variation between WebText and GPT-2 dataset: %s" % ds)
         tv[ds] = tv_estimate(webtext_features, gpt2_features)
         print("Total variation between WebText and GPT-2 dataset: %s is: %f" % (ds, tv[ds]))
+
+# Evaluate model on GPT-3 dataset and compute total variation
+print("Evaluating model on GPT-3 dataset")
+gpt3_features = torch.zeros((len(gpt3), num_features))
+for i in range(0, len(gpt3), batch_size):
+    batch = gpt3[i:i+batch_size]
+    batch = tokenizer(batch, padding=True, truncation=True, max_length=seq_len, return_tensors='pt')
+    batch = {k: v.to(device) for k, v in batch.items()}
+    with torch.no_grad():
+        model(**batch)
+    gpt3_features[i:i+batch_size] = activations[0]
+    activations = []
+
+# Estimate total variation
+print("Estimating total variation between WebText and GPT-3 dataset")
+tv['gpt3'] = tv_estimate(webtext_features, gpt3_features)
+print("Total variation between WebText and GPT-3 dataset is: %f" % tv['gpt3'])
 
 # Update tv estimates in JSON file
 json_file = 'tv_estimates.json'

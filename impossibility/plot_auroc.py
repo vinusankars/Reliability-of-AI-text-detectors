@@ -35,12 +35,14 @@ for seq_len in [25, 50, 75, 100]:
     ypoints2 = np.array([0.5, 0.5])
     plt.plot(xpoints2, ypoints2, 'k--', label='Baseline')
 
-    with open('tv_estimates.json', 'r') as f:
+    tv_filename = 'tv_from_scores.json'      # 'tv_estimates.json'
+    with open(tv_filename, 'r') as f:
         tv_json = json.load(f)
 
     with open('auroc.json', 'r') as f:
         auroc_json = json.load(f)
 
+    # Plot empirical AUROC vs. TV for GPT-2 datasets
     for ds in datasets:
         if ds == 'webtext':
             continue
@@ -65,7 +67,13 @@ for seq_len in [25, 50, 75, 100]:
         plt.scatter(tv_json['seq_len_' + str(seq_len)][ds],
                     auroc_json['seq_len_' + str(seq_len)][ds],
                     marker=mark, c=color, alpha=0.6,
-                    label=ds)
+                    label='GPT-2: ' + ds)
+
+    # Plot empirical AUROC vs. TV for GPT-3 dataset
+    plt.scatter(tv_json['seq_len_' + str(seq_len)]['gpt3'],
+                auroc_json['seq_len_' + str(seq_len)]['gpt3'],
+                marker='*', c='olive', s=75, alpha=0.8,
+                label='GPT-3')
 
     # Plot formatting
     plt.title('Sequence Length = ' + str(seq_len), fontsize=15)
