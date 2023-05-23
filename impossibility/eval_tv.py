@@ -10,62 +10,69 @@ from transformers import RobertaTokenizer, RobertaForSequenceClassification
 from tools import progress_bar, calculate_tv, load_texts
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--shorts', action='store_true', help='evaluate on shorts datasets')
+parser.add_argument('human_text', type=str, help='human text dataset')
 parser.add_argument('--model_name', type=str, default='roberta-base', help='name of model to use')
+parser.add_argument('--data_dir', type=str, default='data', help='name of data directory')
+parser.add_argument('--tag', type=str, default='', help='tag for saving results')
 args = parser.parse_args()
 
 # Settings
+humantext_dataset_name = args.human_text
 batch_size = 100
-data_dir = 'data'
+data_dir = args.data_dir
+sub_data_dir = os.path.join(*(data_dir.split('/')[1:]))
 shorts = args.shorts
 model_name = args.model_name
+tag = args.tag
 ds_tag = {
-    'gpt2': 'GPT-2',
-    'gpt3': 'GPT-3',
-    'chatgpt': 'ChatGPT',
     'small-117M': 'GPT-2-S',
     'medium-345M': 'GPT-2-M',
     'large-762M': 'GPT-2-L',
-    'xl-1542M': 'GPT-2-XL'
+    'xl-1542M': 'GPT-2-XL',
+    'text-ada-001_completion': 'GPT-3-Ada',
+    'text-babbage-001_completion': 'GPT-3-Babbage',
+    'text-curie-001_completion': 'GPT-3-Curie'
 }
 
 # GPT datasets to evaluate on
-# GPT_DS = ['gpt2', 'gpt3']
-# GPT_DS = ['chatgpt']
 GPT_DS = ['small-117M', 'medium-345M', 'large-762M', 'xl-1542M']
-
+# GPT_DS = ['text-ada-001_completion', 'text-babbage-001_completion', 'text-curie-001_completion']
 
 # Load RoBERTa classifier
 tokenizer = RobertaTokenizer.from_pretrained(model_name)
 model = RobertaForSequenceClassification.from_pretrained(model_name, num_labels=2)
 
-# Load Webtext test dataset from data directory
-dataset_name = 'webtext_shorts' if shorts else 'webtext'
-filename = dataset_name + '.test.jsonl'
-webtext_test = load_texts(os.path.join(data_dir, filename), dataset_name)
+# Load humantext test dataset from data directory
+filename = humantext_dataset_name + '.test.jsonl'
+webtext_test = load_texts(os.path.join(data_dir, filename), humantext_dataset_name)
 
 print('Loaded dataset %s with %d samples' % (filename, len(webtext_test)))
 
 # Get TV estimate from json file
-json_file = ('tv_shorts_' if shorts else 'tv_') + model_name + '_' + GPT_DS[0] + '.json'
+results_dir = os.path.join('results', ('tv_shorts' if shorts else 'tv'), sub_data_dir, humantext_dataset_name, model_name)
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
+
+json_file_path = os.path.join(results_dir, GPT_DS[0] + tag + '.json')
+print('Loading TV estimate from %s' % json_file_path)
 tv_json = {}
-if os.path.exists(json_file):
-    with open(json_file, 'r') as f:
+if os.path.exists(json_file_path):
+    with open(json_file_path, 'r') as f:
         tv_json = json.load(f)
 
 for gpt_ds in GPT_DS:
     # Load GPT test dataset from data directory
-    dataset_name = gpt_ds + ('_shorts' if shorts else '')
-    filename = dataset_name + '.test.jsonl'
-    gpt_test = load_texts(os.path.join(data_dir, filename), dataset_name)
+    gpt_dataset_name = gpt_ds + ('_shorts' if shorts else '')
+    filename = gpt_dataset_name + '.test.jsonl'
+    gpt_test = load_texts(os.path.join(data_dir, filename), gpt_dataset_name)
 
     print('Loaded dataset %s with %d samples' % (filename, len(gpt_test)))
 
     tv_vals = {}
     for seq_len in [25, 50, 75, 100]:
         print('Evaluating for seq_len = %d' % seq_len)
-        model_dir = 'models/'+ ('webtext_shorts/' if shorts else 'webtext/')
-        model_dir += gpt_ds + ('_shorts' if shorts else '') + '/seq_len_' + str(seq_len) + '/' + model_name
+        model_dir = os.path.join('models', sub_data_dir, humantext_dataset_name)
+        model_dir = os.path.join(model_dir, gpt_ds + ('_shorts' if shorts else ''), 'seq_len_' + str(seq_len), model_name)
         
         # Load state dict
         print('Loading model from %s' % model_dir)
@@ -119,5 +126,5 @@ for gpt_ds in GPT_DS:
 
 
 # Save TV values to json file
-with open(json_file, 'w') as f:
+with open(json_file_path, 'w') as f:
     json.dump(tv_json, f, indent=2)

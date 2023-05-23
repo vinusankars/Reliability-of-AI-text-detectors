@@ -33,6 +33,7 @@ valid_samples = 4000
 num_epochs = 10
 
 data_dir = args.data_dir
+sub_data_dir = os.path.join(*(data_dir.split('/')[1:]))
 human_text = args.human_text
 ai_text = args.ai_text
 batch_size = args.batch_size
@@ -47,7 +48,9 @@ print('Sequence len:\t%d' % seq_len)
 print('TV model:\t%s' % tv_model)
 
 # Create model directory
-model_dir = 'models/'+ human_text + '/' + ai_text +'/seq_len_' + str(seq_len) + '/' + tv_model
+model_dir = os.path.join('models', sub_data_dir,
+                         human_text, ai_text,
+                         'seq_len_' + str(seq_len), tv_model)
 print('Model dir:\t%s' % model_dir)
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)

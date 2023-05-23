@@ -15,11 +15,15 @@ def load_texts(filepath, dataset_name):
     with open(filepath, 'r') as f:
         for line in f:
             if dataset_name in DATASETS:
-                texts.append(json.loads(line)['text'])
+                texts.append(json.loads(line)['text'].strip())
             elif '_completion' in dataset_name:
-                texts.append(json.loads(line)['completion'])
+                texts.append(json.loads(line)['completion'].strip())
+            elif '_paraphrased' in dataset_name:
+                texts.append(json.loads(line)['paraphrase'].strip())
+            elif '_10k' in dataset_name:
+                texts.append(json.loads(line)['text'].strip())
             else:
-                texts.append(json.loads(line))
+                texts.append(json.loads(line).strip())
 
     return texts
 
@@ -65,10 +69,11 @@ def calculate_tv(scores, labels, threshold):
 # Test cases
 if __name__ == '__main__':
     # Test text loading
-    dataset_name = 'text-ada-001_completion'
+    dataset_name = 'webtext_completion'
     # dataset_name = 'webtext_completion'
-    texts = load_texts('data/ada_text_completions/' + dataset_name + '.train.jsonl', dataset_name)
+    texts = load_texts('data/completions/' + dataset_name + '.test.jsonl', dataset_name)
     print('Loaded %d texts' % len(texts))
+    print(texts[0])
     exit()
 
     from time import sleep

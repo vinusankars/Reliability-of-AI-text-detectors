@@ -1,1 +1,7 @@
 */data
+*/models
+*/__*
+*/deleted
+*.sh
+*/*api_key.txt
+*.json
