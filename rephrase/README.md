@@ -25,6 +25,8 @@ Results:
 | # green tokens | 10085         | 5681      |
 | % detected     | 98            | 57        |
 
+For recursive paraphrasing, we use scripts from Krishna et al. (2023) (Reference: https://github.com/martiansideofthemoon/ai-detection-paraphrases/) for our experiments. Follow their documentation to download the DIPPER paraphraser to /SCRATCH/DIR/ folder. Use recursive_paraphrase.py for for recursive paraphrasing.
+
 > Input text: Officers searched properties in the Waterfront Park and Colonsay View areas of the city on Wednesday.\nDetectives said three firearms, ammunition and a five-figure sum of money were recovered.\nA 26-year-old man who was arrested and charged appeared at Edinburgh Sheriff Court on Thursday...
 
 > Watermarked text (detected): ...\nDetective Inspector Tom Wilson said: "Several firearms were recovered and a significant quantity of cash has been seized.\n"I would appeal to any witnesses or anyone who has any information about this incident to come forward so that we can bring those responsible to justice.\n"An extensive investigation is underway and we’re appealing for anyone with information to come forward. If you do and you think you may have any relevant information that could help with this investigation, or if you were in the area of Waterfront Park and Colonsay View at the time then please get in touch by calling 101 and quoting incident number 2811 of October 3.
