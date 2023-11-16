@@ -12,18 +12,22 @@ parser.add_argument('tv_file_path', type=str, help='path to TV json file')
 args = parser.parse_args()
 
 tv_file_path = args.tv_file_path
-plot_file_path = tv_file_path.replace('.json', '.png')
+# plot_file_path = tv_file_path.replace('.json', '.png')
+plot_file_path = tv_file_path + 'tv.png'
 print('Plotting TV values to %s' % plot_file_path)
 
-# Input JSON data
-data = json.load(open(tv_file_path, 'r'))
+data_list = []
 
-# Preprocess the data to create a DataFrame
-data_list = [
-    {'Model': model, 'Sequence Length': seq_len, 'Value': value}
-    for seq_len, values in data.items()
-    for model, value in values.items()
-]
+for i in range(1, 7):
+    # Input JSON data
+    data = json.load(open(tv_file_path + 'tv_run_' + str(i) + '.json', 'r'))
+
+    # Preprocess the data to create a DataFrame
+    data_list += [
+        {'Model': model, 'Sequence Length': seq_len, 'Value': value}
+        for seq_len, values in data.items()
+        for model, value in values.items()
+    ]
 
 df = pd.DataFrame(data_list)
 
@@ -31,7 +35,7 @@ df = pd.DataFrame(data_list)
 sns.set(style='darkgrid')
 plt.figure()
 sns.barplot(x='Sequence Length', y='Value', hue='Model',
-            data=df, palette='deep')
+            data=df, palette='colorblind') # palette='deep'
 # plt.title('TV w.r.t WebText: GPT-2 vs GPT-3')
 plt.xlabel('Sequence Length', fontsize=18)
 plt.ylabel('Total Variation Estimate', fontsize=18)

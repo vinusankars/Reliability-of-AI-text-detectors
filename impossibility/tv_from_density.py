@@ -82,8 +82,9 @@ def seq_freq(dataset_file, seq_len=seq_len, num_part=num_part,
         frequency[tuple(partition_map(tokens[1:1+seq_len], num_part))] += 1
 
         # Print progress
-        progress = (i + 1) / num_samples
-        print('  Progress: ' + progress_bar(progress), end='\r')
+        if (i + 1) % 1000 == 0 or i == 0:
+            progress = (i + 1) / num_samples
+            print('  Progress: ' + progress_bar(progress), end='\r', flush=True)
 
     print('')
     return frequency

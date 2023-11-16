@@ -5,3 +5,5 @@
 *.sh
 */*api_key.txt
 *.json
+bash_scripts
+logs
